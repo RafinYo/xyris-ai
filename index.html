@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xyris AI Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      color: white;
+    }
+
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      border-radius: 10px;
+      word-wrap: break-word;
+    }
+
+    .user-message {
+      align-self: flex-end;
+      background-color: #007bff;
+      color: white;
+    }
+
+    .bot-message {
+      align-self: flex-start;
+      background-color: #e0e0e0;
+      color: black;
+    }
+
+    #chat-bar {
+      display: flex;
+      padding: 10px;
+      background-color: #141e30;
+      border-top: 1px solid #243b55;
+    }
+
+    #message-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #243b55;
+      border-radius: 5px;
+      background-color: #243b55;
+      color: white;
+    }
+
+    #send-button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #send-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container"></div>
+  <div id="chat-bar">
+    <input type="text" id="message-input" placeholder="Type your message here..." />
+    <button id="send-button">Send</button>
+  </div>
+  <script>
+    // Prevent debugger access
+    (function () {
+      const devtoolsDetector = /./;
+      devtoolsDetector.toString = function () {
+        throw "Paused in debugger";
+      };
+      Object.defineProperty(window, "debugger", {
+        get: function () {
+          throw "Paused in debugger";
+        },
+      });
+      setInterval(() => {
+        console.clear();
+        console.log("%cPaused in debugger", "color: red; font-size: 24px;");
+        if (devtoolsDetector.toString() !== "[object Object]") {
+          location.reload();
+        }
+      }, 1000);
+    })();
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+
+    function createMessageElement(message, isUser) {
+      const messageElement = document.createElement('div');
+      messageElement.textContent = message;
+      messageElement.classList.add('message', isUser ? 'user-message' : 'bot-message');
+      return messageElement;
+    }
+
+    async function sendMessage() {
+      const userMessage = messageInput.value.trim();
+      if (!userMessage) return;
+
+      chatContainer.appendChild(createMessageElement(userMessage, true));
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      messageInput.value = '';
+      try {
+        const response = await fetch(`http://fi4.bot-hosting.net:22869/TestHubChatgptV4?msg=${encodeURIComponent(userMessage)}`);
+        const data = await response.json();
+        const botMessage = data.chat || "No response from Xyris.";
+        chatContainer.appendChild(createMessageElement(botMessage, false));
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      } catch (error) {
+        chatContainer.appendChild(createMessageElement('Error: Unable to connect to Xyris.', false));
+      }
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
